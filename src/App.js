@@ -27,38 +27,6 @@ const initialGameState = {
   outcome: outcomes.UNKNOWN
 }
 
-const alternateInitialGameState = {
-  turn: players.X,
-  outcome: outcomes.UNKNOWN,
-  squares: {
-    a1: "",
-    a2: "",
-    a3: "",
-    b1: "",
-    b2: "",
-    b3: "",
-    c1: "",
-    c2: "",
-    c3: ""
-  }
-}
-
-const alternateInitialGameState2 = {
-  turn: players.X,
-  outcome: outcomes.UNKNOWN,
-  squares: {
-    1: "",
-    2: "",
-    3: "",
-    4: "",
-    5: "",
-    6: "",
-    7: "",
-    8: "",
-    9: ""
-  }
-}
-
 
 // Actions
 const makeMove = (rowNum, colNum) => ({
