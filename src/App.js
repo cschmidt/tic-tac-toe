@@ -1,6 +1,5 @@
-import React, { Component, PropTypes } from 'react'
-import { createStore } from 'redux'
-import logo from './logo.svg'
+import React, { PropTypes } from 'react'
+import { connect } from 'react-redux'
 import './App.css'
 
 
@@ -71,12 +70,9 @@ function ticTacToe(state, action) {
 }
 
 
-const store = createStore(ticTacToe, initialGameState)
-
-
 // Components
 
-const Square = ({onClick, value}) => {
+const Square = ({value = "", onClick}) => {
   return (
     <span className="ticTacToeSquare" onClick={onClick}>{value}</span>
   )
@@ -87,7 +83,8 @@ Square.propTypes = {
   value: PropTypes.string
 }
 
-const Board = ({game}) => {
+
+const Board = ({game, onSquareClick}) => {
   return (
   <div>
     <h1>Tic Tac Toe</h1>
@@ -96,7 +93,7 @@ const Board = ({game}) => {
         <div key={row}>
           {["a", "b", "c"].map((col) =>
             <Square key={col+row}
-                onClick={() => store.dispatch(makeMove(col+row))}
+                onClick={() => onSquareClick(col+row)}
                 value={game.squares[col+row]} />
             )}
         </div>
@@ -107,24 +104,29 @@ const Board = ({game}) => {
 }
 
 Board.propTypes = {
-  game: PropTypes.object.isRequired
+  game: PropTypes.object.isRequired,
+  onSquareClick: PropTypes.func.isRequired
 }
 
-class App extends Component {
 
-  render() {
-    return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
-        </div>
-        <div className="App-intro">
-          <Board game={store.getState()} />
-        </div>
-      </div>
-    );
-  }
-}
+const mapStateToProps = (state) => ({game: state})
+
+const mapDispatchToProps = (dispatch) => ({
+  onSquareClick: (key) => dispatch(makeMove(key))
+})
+
+const TicTacToe = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Board)
+
+
+const App = () => (
+  <div className="App">
+    <TicTacToe />
+  </div>
+)
+
 
 export default App
+export {initialGameState, ticTacToe}

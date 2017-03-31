@@ -27,7 +27,13 @@
   border: solid 1px black;
   height: 3em;
   width: 3em;
+  line-height: 3em;
   display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  font-family: Tahoma, sans-serif;
 }
 
 .ticTacToeRow {
