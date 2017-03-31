@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
+const DEBUG = false
 
 // Type Constants
 
@@ -65,7 +66,7 @@ const move = (game = {}, action) => {
 
 
 function ticTacToe(state, action) {
-  console.log("ticTacToe", state, action)
+  if (DEBUG) console.log("ticTacToe", state, action)
   return move(state, action)
 }
 
@@ -129,4 +130,4 @@ const App = () => (
 
 
 export default App
-export {initialGameState, ticTacToe}
+export {initialGameState, makeMove, ticTacToe}
