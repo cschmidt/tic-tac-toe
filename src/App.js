@@ -34,7 +34,8 @@ const initialGameState = {
     c3: ""
   },
   turn: players.X,
-  outcome: outcomes.UNKNOWN
+  outcome: outcomes.UNKNOWN,
+  winningLine: null
 }
 
 
@@ -43,21 +44,54 @@ const makeMove = (squareKey) => ({
   type:actions.MAKE_MOVE,
   squareKey: squareKey})
 
-
 // Reducers
+
+const determineOutcome = (game) => {
+  // need to check horizontal lines, vertical lines, and diagonals to see if
+  // there's a straight line of one mark (X's or O's)
+  var lines =
+    [["a1", "a2", "a3"],
+     ["b1", "b2", "b3"],
+     ["c1", "c2", "c3"],
+     ["a1", "b1", "c1"],
+     ["a2", "b2", "c2"],
+     ["a3", "b3", "c3"],
+     ["a1", "b2", "c3"],
+     ["a3", "b2", "c1"]]
+  var outcome = {}
+  lines.forEach( (line) => {
+    var counts = {"X": 0, "O": 0, "": 0}
+    line.forEach( (square) => {
+      counts[game.squares[square]]++
+    })
+    if (counts["X"] === 3 || counts["O"] === 3) {
+      outcome = { outcome: outcomes.WIN, winningLine: line }
+    }
+  })
+  return outcome
+}
+
+
 const move = (game = {}, action) => {
   switch (action.type) {
     case actions.MAKE_MOVE :
+      // FIXME: need to have a dedicated reducer for squares?
       var newGameState = Object.assign({}, game)
-      var isSquareEmpty = newGameState.squares[action.squareKey] === ""
-      // mark the game board (if the requested square is empty)
-      if (isSquareEmpty) {
-        newGameState.squares[action.squareKey] = game.turn
-        // switch players
-        newGameState.turn = (game.turn === players.X ? players.O : players.X)
+      var squares = Object.assign({}, game.squares)
+      var isSquareEmpty = squares[action.squareKey] === ""
+      // mark the game board if the requested square is empty and the game is
+      // still in play
+      if (isSquareEmpty && newGameState.outcome === outcomes.UNKNOWN) {
+        squares[action.squareKey] = game.turn
+        newGameState.squares = squares
+        // TODO: how to indicate that the square is filled already?
+        var outcome = determineOutcome(newGameState)
+        Object.assign(newGameState, outcome)
+        // switch players if the game is still in play
+        if (newGameState.outcome === outcomes.UNKNOWN) {
+          newGameState.turn = (game.turn === players.X ? players.O : players.X)
+        }
       }
-      // TODO: how to indicate that the square is filled already?
-      // TODO: check if the game is over (either by win or draw)
       return newGameState
     default:
       return game
@@ -130,4 +164,4 @@ const App = () => (
 
 
 export default App
-export {initialGameState, makeMove, ticTacToe}
+export {initialGameState, makeMove, outcomes, players, ticTacToe}
