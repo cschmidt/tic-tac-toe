@@ -5,8 +5,7 @@ import App from './App'
 import { initialGameState, makeMove, outcomes, ticTacToe } from './App'
 import { createStore } from 'redux'
 
-
-var store
+let store
 
 beforeEach(() => {
   store = createStore(ticTacToe, initialGameState)
@@ -26,7 +25,7 @@ it('renders without crashing', () => {
 })
 
 it('has an empty starting board', () => {
-  var game = store.getState()
+  let game = store.getState()
   for (let square in game.squares) {
     expect(game.squares[square]).toEqual("")
   }
