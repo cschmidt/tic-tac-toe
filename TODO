@@ -1,0 +1,19 @@
+Game Play 1.0
+-------------
+- figure out draws
+- allow forfeit/reset/"start new game"?
+- invite a friend to play (can be as simple as sending a URL)
+- visual indication of the outcome ("X wins!", for example)
+- visual indication of where you can and cannot mark a square (i.e. square
+  is already marked)
+
+
+Game Play 2.0
+-------------
+- keep game history
+
+
+Infrastructure
+--------------
+- simulate asynchronous moves (add a delay?) in preparation for sharing game
+  state
