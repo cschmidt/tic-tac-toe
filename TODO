@@ -6,6 +6,7 @@ Game Play 1.0
 - visual indication of the outcome ("X wins!", for example)
 - visual indication of where you can and cannot mark a square (i.e. square
   is already marked)
+- square keys shouldn't be case sensitive
 
 
 Game Play 2.0
