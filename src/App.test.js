@@ -70,3 +70,17 @@ it('knows when the game is a draw', () => {
   // last turn was X
   expect(store.getState().turn).toEqual("X")
 })
+
+it('differentiates between draw and win with all squares marked', () => {
+  mark("a1") // X
+  mark("b1") // O
+  mark("c1") // X
+  mark("a2") // O
+  mark("b2") // X
+  mark("c2") // O
+  mark("b3") // X
+  mark("a3") // O
+  mark("c3") // X
+  expect(store.getState().outcome).toEqual(outcomes.WIN)
+  expect(store.getState().winningLine).toEqual(['a1', 'b2', 'c3'])
+})

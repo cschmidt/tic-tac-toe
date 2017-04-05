@@ -71,7 +71,7 @@ const determineOutcome = (game) => {
     counts.O = 0
   })
   // If there are no empty squares, and
-  if (counts[""] === 0) {
+  if (outcome.outcome === undefined && counts[""] === 0) {
     outcome = { outcome: outcomes.DRAW }
   }
   return outcome
