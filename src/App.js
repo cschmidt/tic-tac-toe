@@ -39,6 +39,18 @@ const initialGameState = {
 }
 
 
+// Representations of all vertical, horizontal and diagonal lines
+const lines =
+  [["a1", "a2", "a3"],
+   ["b1", "b2", "b3"],
+   ["c1", "c2", "c3"],
+   ["a1", "b1", "c1"],
+   ["a2", "b2", "c2"],
+   ["a3", "b3", "c3"],
+   ["a1", "b2", "c3"],
+   ["a3", "b2", "c1"]]
+
+
 // Actions
 const makeMove = (squareKey) => ({
   type:actions.MAKE_MOVE,
@@ -47,17 +59,8 @@ const makeMove = (squareKey) => ({
 // Reducers
 
 const determineOutcome = (game) => {
-  // need to check horizontal lines, vertical lines, and diagonals to see if
-  // there's a straight line of one mark (X's or O's)
-  var lines =
-    [["a1", "a2", "a3"],
-     ["b1", "b2", "b3"],
-     ["c1", "c2", "c3"],
-     ["a1", "b1", "c1"],
-     ["a2", "b2", "c2"],
-     ["a3", "b3", "c3"],
-     ["a1", "b2", "c3"],
-     ["a3", "b2", "c1"]]
+  // See if there's a straight line of one mark (X's or O's), or if the board
+  // is fully marked without a winner (a draw).
   var outcome = {}
   var counts = {"X": 0, "O": 0, "": 0}
   lines.forEach( (line) => {
@@ -67,10 +70,12 @@ const determineOutcome = (game) => {
     if (counts.X === 3 || counts.O === 3) {
       outcome = { outcome: outcomes.WIN, winningLine: line }
     }
+    // Reset X and O counts for next line (don't reset empty space count).
     counts.X = 0
     counts.O = 0
   })
-  // If there are no empty squares, and
+  // If there are no empty squares, and we haven't already found a winner, we
+  // must have a draw.
   if (outcome.outcome === undefined && counts[""] === 0) {
     outcome = { outcome: outcomes.DRAW }
   }
