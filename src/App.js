@@ -59,15 +59,21 @@ const determineOutcome = (game) => {
      ["a1", "b2", "c3"],
      ["a3", "b2", "c1"]]
   var outcome = {}
+  var counts = {"X": 0, "O": 0, "": 0}
   lines.forEach( (line) => {
-    var counts = {"X": 0, "O": 0, "": 0}
     line.forEach( (square) => {
       counts[game.squares[square]]++
     })
-    if (counts["X"] === 3 || counts["O"] === 3) {
+    if (counts.X === 3 || counts.O === 3) {
       outcome = { outcome: outcomes.WIN, winningLine: line }
     }
+    counts.X = 0
+    counts.O = 0
   })
+  // If there are no empty squares, and
+  if (outcome.outcome === undefined && counts[""] === 0) {
+    outcome = { outcome: outcomes.DRAW }
+  }
   return outcome
 }
 
@@ -118,6 +124,11 @@ Square.propTypes = {
   value: PropTypes.string
 }
 
+const GameStatus = ({outcome}) => {
+  return (
+    <div>{outcome === outcomes.UNKNOWN ? "In Progress" : outcome}</div>
+  )
+}
 
 const Board = ({game, onSquareClick}) => {
   return (
@@ -134,6 +145,7 @@ const Board = ({game, onSquareClick}) => {
         </div>
       )}
     </div>
+    <GameStatus outcome={game.outcome}/>
   </div>
   )
 }

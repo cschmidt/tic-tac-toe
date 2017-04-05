@@ -31,6 +31,10 @@ it('has an empty starting board', () => {
   }
 })
 
+it('starts with the outcome being unknown', () => {
+  expect(store.getState().outcome).toEqual(outcomes.UNKNOWN)
+})
+
 it('can make moves and take turns', () => {
   mark("a1")
   expect(store.getState().squares.a1).toEqual("X")
@@ -39,8 +43,6 @@ it('can make moves and take turns', () => {
 })
 
 it('determines the winner', () => {
-  // starting a new game, so the outcome shouldn't be known, right?
-  expect(store.getState().outcome).toEqual(outcomes.UNKNOWN)
   mark("a1")
   // we still don't know the outcome after a single move
   expect(store.getState().outcome).toEqual(outcomes.UNKNOWN)
@@ -51,4 +53,34 @@ it('determines the winner', () => {
   // X should have won
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().turn).toEqual("X")
+})
+
+it('knows when the game is a draw', () => {
+  mark("a1") // X
+  mark("b1") // O
+  mark("a2") // X
+  mark("b2") // O
+  mark("c1") // X
+  mark("c2") // O
+  mark("b3") // X
+  mark("a3") // O
+  mark("c3") // X
+  // should now have a draw
+  expect(store.getState().outcome).toEqual(outcomes.DRAW)
+  // last turn was X
+  expect(store.getState().turn).toEqual("X")
+})
+
+it('differentiates between draw and win with all squares marked', () => {
+  mark("a1") // X
+  mark("b1") // O
+  mark("c1") // X
+  mark("a2") // O
+  mark("b2") // X
+  mark("c2") // O
+  mark("b3") // X
+  mark("a3") // O
+  mark("c3") // X
+  expect(store.getState().outcome).toEqual(outcomes.WIN)
+  expect(store.getState().winningLine).toEqual(['a1', 'b2', 'c3'])
 })
