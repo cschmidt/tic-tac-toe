@@ -124,6 +124,11 @@ Square.propTypes = {
   value: PropTypes.string
 }
 
+const GameStatus = ({outcome}) => {
+  return (
+    <div>{outcome === outcomes.UNKNOWN ? "In Progress" : outcome}</div>
+  )
+}
 
 const Board = ({game, onSquareClick}) => {
   return (
@@ -140,6 +145,7 @@ const Board = ({game, onSquareClick}) => {
         </div>
       )}
     </div>
+    <GameStatus outcome={game.outcome}/>
   </div>
   )
 }
