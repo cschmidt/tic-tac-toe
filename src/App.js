@@ -118,7 +118,7 @@ function ticTacToe(state, action) {
 
 // Components
 
-const Square = ({value = "", onClick}) => {
+const Square = ({value = "", onClick, id}) => {
   return (
     <span className="ticTacToeSquare" onClick={onClick}>{value}</span>
   )
@@ -126,49 +126,58 @@ const Square = ({value = "", onClick}) => {
 
 Square.propTypes = {
   onClick: PropTypes.func.isRequired,
-  value: PropTypes.string
+  value: PropTypes.string,
+  id: PropTypes.string.isRequired
 }
 
-const GameStatus = ({outcome}) => {
+const VisibleSquare = connect(
+  (state, props) => {
+    if (DEBUG) console.log("connect", props.id)
+    return {value: state.squares[props.id]}
+  }
+)(Square)
+
+
+const GameStatus = ({outcome = outcomes.UNKNOWN}) => {
   return (
     <div>{outcome === outcomes.UNKNOWN ? "In Progress" : outcome}</div>
   )
 }
 
-const Board = ({game, onSquareClick}) => {
+const Board = ({onSquareClick}) => {
   return (
   <div>
     <h1>Tic Tac Toe</h1>
     <div className="ticTacToeBoard">
       {[1, 2, 3].map( (row) =>
         <div key={row}>
-          {["a", "b", "c"].map((col) =>
-            <Square key={col+row}
-                onClick={() => onSquareClick(col+row)}
-                value={game.squares[col+row]} />
+          {["a", "b", "c"].map((col) => {
+            let id = col+row
+            return (<VisibleSquare id={id} key={id}
+                onClick={() => onSquareClick(id)} />)
+            }
             )}
         </div>
       )}
     </div>
-    <GameStatus outcome={game.outcome}/>
+    <GameStatus />
   </div>
   )
 }
 
 Board.propTypes = {
-  game: PropTypes.object.isRequired,
   onSquareClick: PropTypes.func.isRequired
 }
 
-
-const mapStateToProps = (state) => ({game: state})
-
 const mapDispatchToProps = (dispatch) => ({
-  onSquareClick: (key) => dispatch(makeMove(key))
+  onSquareClick: (id) => {
+    if (DEBUG) console.log("onSquareClick", id)
+    dispatch(makeMove(id))
+  }
 })
 
 const TicTacToe = connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(Board)
 
