@@ -35,7 +35,8 @@ const initialGameState = {
   },
   turn: players.X,
   outcome: outcomes.UNKNOWN,
-  winningLine: null
+  winningLine: null,
+  synopsis: ""
 }
 
 
@@ -57,6 +58,24 @@ const makeMove = (squareKey) => ({
   squareKey: squareKey})
 
 // Reducers
+
+const updateSynopsis = ({outcome, turn}) => {
+  let synopsis = "?"
+  switch (outcome) {
+    case outcomes.UNKNOWN:
+      synopsis = "In Progress"
+      break
+    case outcomes.WIN:
+      synopsis = `${turn} wins!`
+      break
+    case outcomes.DRAW:
+      synopsis = "Draw"
+      break
+    default:
+      synopsis = "?"
+  }
+  return synopsis
+}
 
 const determineOutcome = (game) => {
   // See if there's a straight line of one mark (X's or O's), or if the board
@@ -103,6 +122,8 @@ const move = (game = {}, action) => {
           newGameState.turn = (game.turn === players.X ? players.O : players.X)
         }
       }
+      newGameState.synopsis = updateSynopsis(newGameState)
+      if (DEBUG) console.log("newGameState", newGameState)
       return newGameState
     default:
       return game
@@ -111,7 +132,6 @@ const move = (game = {}, action) => {
 
 
 function ticTacToe(state, action) {
-  if (DEBUG) console.log("ticTacToe", state, action)
   return move(state, action)
 }
 
@@ -130,7 +150,7 @@ Square.propTypes = {
   id: PropTypes.string.isRequired
 }
 
-const VisibleSquare = connect(
+const SquareContainer = connect(
   (state, props) => {
     if (DEBUG) console.log("connect", props.id)
     return {value: state.squares[props.id]}
@@ -138,11 +158,17 @@ const VisibleSquare = connect(
 )(Square)
 
 
-const GameStatus = ({outcome = outcomes.UNKNOWN}) => {
-  return (
-    <div>{outcome === outcomes.UNKNOWN ? "In Progress" : outcome}</div>
-  )
+const Synopsis = ({synopsis}) => {
+  return (<div className="ticTacToeSynopsis">{synopsis}</div>)
 }
+
+Synopsis.propTypes = {
+  synopsis: PropTypes.string
+}
+
+const SynopsisContainer = connect(
+  (state) => ({synopsis: state.synopsis})
+)(Synopsis)
 
 const Board = ({onSquareClick}) => {
   return (
@@ -153,14 +179,13 @@ const Board = ({onSquareClick}) => {
         <div key={row}>
           {["a", "b", "c"].map((col) => {
             let id = col+row
-            return (<VisibleSquare id={id} key={id}
+            return (<SquareContainer id={id} key={id}
                 onClick={() => onSquareClick(id)} />)
-            }
-            )}
+          })}
         </div>
       )}
     </div>
-    <GameStatus />
+    <SynopsisContainer />
   </div>
   )
 }
