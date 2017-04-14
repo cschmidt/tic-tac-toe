@@ -21,17 +21,23 @@ const actions = {
   MAKE_MOVE: "MAKE_MOVE"
 }
 
+const moveStates = {
+  MOVE_PENDING: "MOVE_PENDING",
+  MOVE_SUCCESS: "MOVE_SUCCESS",
+  MOVE_ERROR: "MOVE_ERROR"
+}
+
 const initialGameState = {
   squares: {
-    a1: "",
-    a2: "",
-    a3: "",
-    b1: "",
-    b2: "",
-    b3: "",
-    c1: "",
-    c2: "",
-    c3: ""
+    a1: {mark: "", moveState: null},
+    a2: {mark: "", moveState: null},
+    a3: {mark: "", moveState: null},
+    b1: {mark: "", moveState: null},
+    b2: {mark: "", moveState: null},
+    b3: {mark: "", moveState: null},
+    c1: {mark: "", moveState: null},
+    c2: {mark: "", moveState: null},
+    c3: {mark: "", moveState: null}
   },
   turn: players.X,
   outcome: outcomes.UNKNOWN,
@@ -84,7 +90,7 @@ const determineOutcome = (game) => {
   var counts = {"X": 0, "O": 0, "": 0}
   lines.forEach( (line) => {
     line.forEach( (square) => {
-      counts[game.squares[square]]++
+      counts[game.squares[square].mark]++
     })
     if (counts.X === 3 || counts.O === 3) {
       outcome = { outcome: outcomes.WIN, winningLine: line }
@@ -106,15 +112,15 @@ const move = (game = {}, action) => {
   switch (action.type) {
     case actions.MAKE_MOVE :
       // FIXME: need to have a dedicated reducer for squares?
+      var squareId = action.squareId
       var newGameState = Object.assign({}, game)
       var squares = Object.assign({}, game.squares)
-      var isSquareEmpty = squares[action.squareId] === ""
+      var isSquareEmpty = squares[squareId].mark === ""
       // mark the game board if the requested square is empty and the game is
       // still in play
       if (isSquareEmpty && newGameState.outcome === outcomes.UNKNOWN) {
-        squares[action.squareId] = game.turn
+        squares[squareId] = {...squares[squareId], mark: game.turn}
         newGameState.squares = squares
-        // TODO: how to indicate that the square is filled already?
         var outcome = determineOutcome(newGameState)
         Object.assign(newGameState, outcome)
         // switch players if the game is still in play
@@ -156,7 +162,7 @@ Square.propTypes = {
 const SquareContainer = connect(
   (state, props) => {
     if (DEBUG) console.log("connect", props.id)
-    let mark = state.squares[props.id]
+    let mark = state.squares[props.id].mark
     return {
       mark,
       isMarkable: mark === "" && state.outcome === outcomes.UNKNOWN }

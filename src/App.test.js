@@ -27,7 +27,7 @@ it('renders without crashing', () => {
 it('has an empty starting board', () => {
   let game = store.getState()
   for (let square in game.squares) {
-    expect(game.squares[square]).toEqual("")
+    expect(game.squares[square].mark).toEqual("")
   }
 })
 
@@ -37,9 +37,9 @@ it('starts with the outcome being unknown', () => {
 
 it('can make moves and take turns', () => {
   mark("a1")
-  expect(store.getState().squares.a1).toEqual("X")
+  expect(store.getState().squares.a1.mark).toEqual("X")
   mark("a2")
-  expect(store.getState().squares.a2).toEqual("O")
+  expect(store.getState().squares.a2.mark).toEqual("O")
 })
 
 it('determines the winner', () => {
@@ -51,6 +51,7 @@ it('determines the winner', () => {
   mark("b2")
   mark("a3")
   // X should have won
+  console.log(store.getState())
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().turn).toEqual("X")
 })
