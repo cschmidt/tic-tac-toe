@@ -55,7 +55,7 @@ const lines =
 // Actions
 const makeMove = (squareKey) => ({
   type:actions.MAKE_MOVE,
-  squareKey: squareKey})
+  squareKey})
 
 // Reducers
 
@@ -158,7 +158,7 @@ const SquareContainer = connect(
     if (DEBUG) console.log("connect", props.id)
     let mark = state.squares[props.id]
     return {
-      mark: mark,
+      mark,
       isMarkable: mark === "" && state.outcome === outcomes.UNKNOWN }
   }
 )(Square)
