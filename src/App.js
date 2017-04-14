@@ -150,7 +150,7 @@ Square.propTypes = {
   id: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
   mark: PropTypes.string,
-  isMarkable: PropTypes.boolean
+  isMarkable: PropTypes.bool
 }
 
 const SquareContainer = connect(
