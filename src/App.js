@@ -138,22 +138,27 @@ function ticTacToe(state, action) {
 
 // Components
 
-const Square = ({value = "", onClick, id}) => {
+const Square = ({value = "", onClick, id, isMarkable}) => {
   return (
-    <span className="ticTacToeSquare" onClick={onClick}>{value}</span>
+    <span
+      className={"ticTacToeSquare" + (isMarkable ? " markable" : "")}
+      onClick={onClick}>{value}</span>
   )
 }
 
 Square.propTypes = {
+  id: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
   value: PropTypes.string,
-  id: PropTypes.string.isRequired
+  isMarkable: PropTypes.boolean
 }
 
 const SquareContainer = connect(
   (state, props) => {
     if (DEBUG) console.log("connect", props.id)
-    return {value: state.squares[props.id]}
+    let value = state.squares[props.id]
+    return {value: value,
+      isMarkable: value === "" && state.outcome === outcomes.UNKNOWN }
   }
 )(Square)
 
