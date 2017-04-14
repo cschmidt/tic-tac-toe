@@ -53,9 +53,9 @@ const lines =
 
 
 // Actions
-const makeMove = (squareKey) => ({
+const makeMove = (squareId) => ({
   type:actions.MAKE_MOVE,
-  squareKey})
+  squareId})
 
 // Reducers
 
@@ -108,11 +108,11 @@ const move = (game = {}, action) => {
       // FIXME: need to have a dedicated reducer for squares?
       var newGameState = Object.assign({}, game)
       var squares = Object.assign({}, game.squares)
-      var isSquareEmpty = squares[action.squareKey] === ""
+      var isSquareEmpty = squares[action.squareId] === ""
       // mark the game board if the requested square is empty and the game is
       // still in play
       if (isSquareEmpty && newGameState.outcome === outcomes.UNKNOWN) {
-        squares[action.squareKey] = game.turn
+        squares[action.squareId] = game.turn
         newGameState.squares = squares
         // TODO: how to indicate that the square is filled already?
         var outcome = determineOutcome(newGameState)
