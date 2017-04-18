@@ -65,7 +65,7 @@ const makeMove = (squareId) => ({
 
 // Reducers
 
-const updateSynopsis = ({outcome, turn}) => {
+const produceSynopsis = (outcome, turn) => {
   let synopsis = "?"
   switch (outcome) {
     case outcomes.UNKNOWN:
@@ -83,17 +83,19 @@ const updateSynopsis = ({outcome, turn}) => {
   return synopsis
 }
 
-const determineOutcome = (game) => {
+const determineOutcome = (squares) => {
   // See if there's a straight line of one mark (X's or O's), or if the board
   // is fully marked without a winner (a draw).
-  var outcome = {}
+  var outcome = outcomes.UNKNOWN
   var counts = {"X": 0, "O": 0, "": 0}
+  var winningLine = null
   lines.forEach( (line) => {
     line.forEach( (square) => {
-      counts[game.squares[square].mark]++
+      counts[squares[square].mark]++
     })
     if (counts.X === 3 || counts.O === 3) {
-      outcome = { outcome: outcomes.WIN, winningLine: line }
+      outcome = outcomes.WIN
+      winningLine = line
     }
     // Reset X and O counts for next line (don't reset empty space count).
     counts.X = 0
@@ -101,36 +103,31 @@ const determineOutcome = (game) => {
   })
   // If there are no empty squares, and we haven't already found a winner, we
   // must have a draw.
-  if (outcome.outcome === undefined && counts[""] === 0) {
-    outcome = { outcome: outcomes.DRAW }
+  if (outcome === outcomes.UNKNOWN && counts[""] === 0) {
+    outcome = outcomes.DRAW
   }
-  return outcome
+  return {outcome, winningLine}
 }
 
 
 const move = (game = {}, action) => {
   switch (action.type) {
     case actions.MAKE_MOVE :
-      // FIXME: need to have a dedicated reducer for squares?
+      var squares = {...game.squares}
       var squareId = action.squareId
-      var newGameState = Object.assign({}, game)
-      var squares = Object.assign({}, game.squares)
       var isSquareEmpty = squares[squareId].mark === ""
       // mark the game board if the requested square is empty and the game is
       // still in play
-      if (isSquareEmpty && newGameState.outcome === outcomes.UNKNOWN) {
+      if (isSquareEmpty && game.outcome === outcomes.UNKNOWN) {
         squares[squareId] = {...squares[squareId], mark: game.turn}
-        newGameState.squares = squares
-        var outcome = determineOutcome(newGameState)
-        Object.assign(newGameState, outcome)
+        var {outcome, winningLine} = determineOutcome(squares)
         // switch players if the game is still in play
-        if (newGameState.outcome === outcomes.UNKNOWN) {
-          newGameState.turn = (game.turn === players.X ? players.O : players.X)
-        }
+        var turn =
+          outcome === outcomes.UNKNOWN ?
+          (game.turn === players.X ? players.O : players.X) : game.turn
       }
-      newGameState.synopsis = updateSynopsis(newGameState)
-      if (DEBUG) console.log("newGameState", newGameState)
-      return newGameState
+      var synopsis = produceSynopsis(outcome, turn)
+      return {...game, squares, turn, outcome, winningLine, synopsis}
     default:
       return game
   }

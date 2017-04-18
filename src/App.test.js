@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import App from './App'
-import { initialGameState, makeMove, outcomes, ticTacToe } from './App'
+import { initialGameState, makeMove, squares, outcomes, ticTacToe } from './App'
 import { createStore } from 'redux'
 
 let store
@@ -14,6 +14,7 @@ beforeEach(() => {
 function mark(square) {
   store.dispatch(makeMove(square))
 }
+
 
 it('renders without crashing', () => {
   const div = document.createElement('div')
@@ -51,7 +52,6 @@ it('determines the winner', () => {
   mark("b2")
   mark("a3")
   // X should have won
-  console.log(store.getState())
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().turn).toEqual("X")
 })
