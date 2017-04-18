@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
-const DEBUG = false
+const DEBUG = true
 
 // Type Constants
 
@@ -18,6 +18,7 @@ const outcomes = {
 }
 
 const actions = {
+  REQUEST_MOVE: "REQUEST_MOVE",
   MAKE_MOVE: "MAKE_MOVE"
 }
 
@@ -62,6 +63,11 @@ const lines =
 const makeMove = (squareId) => ({
   type:actions.MAKE_MOVE,
   squareId})
+
+const requestMove = (squareId) => ({
+  type: actions.REQUEST_MOVE,
+  squareId})
+
 
 // Reducers
 
@@ -111,11 +117,11 @@ const determineOutcome = (squares) => {
 
 
 const move = (game = {}, action) => {
+  var squares = {...game.squares}
+  var squareId = action.squareId
+  var isSquareEmpty = squares[squareId] && squares[squareId].mark === ""
   switch (action.type) {
-    case actions.MAKE_MOVE :
-      var squares = {...game.squares}
-      var squareId = action.squareId
-      var isSquareEmpty = squares[squareId].mark === ""
+    case actions.MAKE_MOVE:
       // mark the game board if the requested square is empty and the game is
       // still in play
       if (isSquareEmpty && game.outcome === outcomes.UNKNOWN) {
@@ -128,6 +134,12 @@ const move = (game = {}, action) => {
       }
       var synopsis = produceSynopsis(outcome, turn)
       return {...game, squares, turn, outcome, winningLine, synopsis}
+    case actions.REQUEST_MOVE:
+      if (DEBUG) console.log( "requestMove", squareId)
+      if (isSquareEmpty && game.outcome === outcomes.UNKNOWN) {
+        squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_PENDING}
+      }
+      return {...game, squares}
     default:
       return game
   }
@@ -141,10 +153,10 @@ function ticTacToe(state, action) {
 
 // Components
 
-const Square = ({mark = "", onClick, id, isMarkable}) => {
+const Square = ({mark = "", onClick, id, isMarkable, isMovePending = false}) => {
   return (
     <span
-      className={"ticTacToeSquare" + (isMarkable ? " markable" : "")}
+      className={"ticTacToeSquare" + (isMarkable ? " markable" : "") + (isMovePending ? " movePending" : "")}
       onClick={onClick}>{mark}</span>
   )
 }
@@ -153,16 +165,20 @@ Square.propTypes = {
   id: PropTypes.string.isRequired,
   onClick: PropTypes.func.isRequired,
   mark: PropTypes.string,
-  isMarkable: PropTypes.bool
+  isMarkable: PropTypes.bool,
+  isMovePending: PropTypes.bool
 }
 
 const SquareContainer = connect(
   (state, props) => {
     if (DEBUG) console.log("connect", props.id)
-    let mark = state.squares[props.id].mark
+    let square = state.squares[props.id]
     return {
-      mark,
-      isMarkable: mark === "" && state.outcome === outcomes.UNKNOWN }
+      mark: square.mark,
+      isMarkable: state.outcome === outcomes.UNKNOWN &&
+                  square.mark === "" &&
+                  square.moveState === null,
+      isMovePending: square.moveState === moveStates.MOVE_PENDING }
   }
 )(Square)
 
@@ -206,7 +222,7 @@ Board.propTypes = {
 const mapDispatchToProps = (dispatch) => ({
   onSquareClick: (id) => {
     if (DEBUG) console.log("onSquareClick", id)
-    dispatch(makeMove(id))
+    dispatch(requestMove(id))
   }
 })
 

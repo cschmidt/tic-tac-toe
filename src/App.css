@@ -40,6 +40,13 @@
   background-color: #88ff88;
 }
 
+.ticTacToeSquare.movePending {
+  background-image: url("/loading.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+
 .ticTacToeRow {
   padding: 0;
   margin: 0;
