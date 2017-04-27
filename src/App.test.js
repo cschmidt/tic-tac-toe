@@ -52,6 +52,7 @@ it('determines the winner', () => {
   mark("b2")
   mark("a3")
   // X should have won
+  console.log(store.getState())
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().turn).toEqual("X")
 })

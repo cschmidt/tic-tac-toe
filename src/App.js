@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
-const DEBUG = true
+const DEBUG = false
 
 // Type Constants
 
@@ -18,13 +18,14 @@ const outcomes = {
 }
 
 const actions = {
-  REQUEST_MOVE: "REQUEST_MOVE",
-  MAKE_MOVE: "MAKE_MOVE"
+  SUBMIT_MOVE: "SUBMIT_MOVE",
+  MAKE_MOVE: "MAKE_MOVE",
+  RECEIVE_MOVE: "RECEIVE_MOVE"
 }
 
 const moveStates = {
   MOVE_PENDING: "MOVE_PENDING",
-  MOVE_SUCCESS: "MOVE_SUCCESS",
+  MOVE_COMPLETE: "MOVE_COMPLETE",
   MOVE_ERROR: "MOVE_ERROR"
 }
 
@@ -64,10 +65,21 @@ const makeMove = (squareId) => ({
   type:actions.MAKE_MOVE,
   squareId})
 
-const requestMove = (squareId) => ({
-  type: actions.REQUEST_MOVE,
+const submitMove = (squareId) => ({
+  type: actions.SUBMIT_MOVE,
   squareId})
 
+const receiveMove = (squareId, state = {}) => ({
+  type: actions.RECEIVE_MOVE,
+  squareId,
+  state
+})
+
+// Predicates (?)
+
+const inProgress = (game) => {
+  return game.outcome === outcomes.UNKNOWN
+}
 
 // Reducers
 
@@ -117,6 +129,7 @@ const determineOutcome = (squares) => {
 
 
 const move = (game = {}, action) => {
+  if (DEBUG) console.log("move", action)
   var squares = {...game.squares}
   var squareId = action.squareId
   var isSquareEmpty = squares[squareId] && squares[squareId].mark === ""
@@ -124,7 +137,7 @@ const move = (game = {}, action) => {
     case actions.MAKE_MOVE:
       // mark the game board if the requested square is empty and the game is
       // still in play
-      if (isSquareEmpty && game.outcome === outcomes.UNKNOWN) {
+      if (isSquareEmpty && inProgress(game)) {
         squares[squareId] = {...squares[squareId], mark: game.turn}
         var {outcome, winningLine} = determineOutcome(squares)
         // switch players if the game is still in play
@@ -134,14 +147,28 @@ const move = (game = {}, action) => {
       }
       var synopsis = produceSynopsis(outcome, turn)
       return {...game, squares, turn, outcome, winningLine, synopsis}
-    case actions.REQUEST_MOVE:
-      if (DEBUG) console.log( "requestMove", squareId)
-      if (isSquareEmpty && game.outcome === outcomes.UNKNOWN) {
+    case actions.SUBMIT_MOVE:
+      if (DEBUG) console.log( "submitMove", squareId)
+      if (isSquareEmpty && inProgress(game)) {
         squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_PENDING}
       }
       return {...game, squares}
+    case actions.RECEIVE_MOVE:
+      squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_COMPLETE}
+      return {...game, squares}
     default:
       return game
+  }
+}
+
+const asyncMove = (squareId) => {
+  if (DEBUG) console.log("asyncMove", squareId)
+  return (dispatch) => {
+    dispatch(submitMove(squareId))
+    setTimeout(() => {
+      dispatch(makeMove(squareId))
+      dispatch(receiveMove(squareId))
+    }, 500)
   }
 }
 
@@ -170,12 +197,12 @@ Square.propTypes = {
 }
 
 const SquareContainer = connect(
-  (state, props) => {
-    if (DEBUG) console.log("connect", props.id)
-    let square = state.squares[props.id]
+  (game, props) => {
+    let square = game.squares[props.id]
+    if (DEBUG) console.log("connect", props.id, square)
     return {
       mark: square.mark,
-      isMarkable: state.outcome === outcomes.UNKNOWN &&
+      isMarkable: inProgress(game) &&
                   square.mark === "" &&
                   square.moveState === null,
       isMovePending: square.moveState === moveStates.MOVE_PENDING }
@@ -222,7 +249,7 @@ Board.propTypes = {
 const mapDispatchToProps = (dispatch) => ({
   onSquareClick: (id) => {
     if (DEBUG) console.log("onSquareClick", id)
-    dispatch(requestMove(id))
+    dispatch(asyncMove(id))
   }
 })
 
