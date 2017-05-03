@@ -1,3 +1,4 @@
+import * as _ from 'underscore'
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
@@ -75,10 +76,45 @@ const receiveMove = (squareId, state = {}) => ({
   state
 })
 
+// Utility functions
+const debug = (...args) => {
+  if (DEBUG) console.log(...args)
+}
+
 // Predicates (?)
 
 const inProgress = (game) => {
   return game.outcome === outcomes.UNKNOWN
+}
+
+const movePending = (game) => {
+  return _.some(game.squares,
+    (square) => {return square.moveState === "MOVE_PENDING"})
+}
+
+// Errors
+
+function MoveInProgressError(squareId) {
+  this.squareId = squareId
+  this.message = `Waiting for move to complete on ${squareId}`
+  this.toString = () => {
+    return this.message
+  }
+}
+
+function GameOverError() {
+  this.message = "Game Over!"
+  this.toString = () => {
+    return this.message
+  }
+}
+
+function SquareAlreadyMarkedError(squareId) {
+  this.squareId = squareId
+  this.message = `${squareId} is already marked`
+  this.toString = () => {
+    return this.message
+  }
 }
 
 // Reducers
@@ -96,6 +132,7 @@ const produceSynopsis = (outcome, turn) => {
       synopsis = "Draw"
       break
     default:
+      debug("Oh no, outcome was unexpected!", outcome)
       synopsis = "?"
   }
   return synopsis
@@ -129,7 +166,7 @@ const determineOutcome = (squares) => {
 
 
 const move = (game = {}, action) => {
-  if (DEBUG) console.log("move", action)
+  debug("move", action)
   var squares = {...game.squares}
   var squareId = action.squareId
   var isSquareEmpty = squares[squareId] && squares[squareId].mark === ""
@@ -148,8 +185,14 @@ const move = (game = {}, action) => {
       var synopsis = produceSynopsis(outcome, turn)
       return {...game, squares, turn, outcome, winningLine, synopsis}
     case actions.SUBMIT_MOVE:
-      if (DEBUG) console.log( "submitMove", squareId)
-      if (isSquareEmpty && inProgress(game)) {
+      debug( "submitMove", squareId, game)
+      if (movePending(game)) {
+        throw new MoveInProgressError(squareId)
+      } if (!inProgress(game)) {
+        throw new GameOverError()
+      } if (!isSquareEmpty) {
+        throw new SquareAlreadyMarkedError(squareId)
+      } else {
         squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_PENDING}
       }
       return {...game, squares}
@@ -162,13 +205,23 @@ const move = (game = {}, action) => {
 }
 
 const asyncMove = (squareId) => {
-  if (DEBUG) console.log("asyncMove", squareId)
+  debug("asyncMove", squareId)
   return (dispatch) => {
-    dispatch(submitMove(squareId))
-    setTimeout(() => {
-      dispatch(makeMove(squareId))
-      dispatch(receiveMove(squareId))
-    }, 500)
+    try {
+      dispatch(submitMove(squareId))
+      setTimeout(() => {
+        dispatch(makeMove(squareId))
+        dispatch(receiveMove(squareId))
+      }, 2000)
+    } catch (e) {
+      if (e instanceof MoveInProgressError ||
+          e instanceof GameOverError ||
+          e instanceof SquareAlreadyMarkedError) {
+        debug(e.message)
+      } else {
+        throw e
+      }
+    }
   }
 }
 
@@ -199,12 +252,13 @@ Square.propTypes = {
 const SquareContainer = connect(
   (game, props) => {
     let square = game.squares[props.id]
-    if (DEBUG) console.log("connect", props.id, square)
+    debug("connect", props.id, square)
     return {
       mark: square.mark,
       isMarkable: inProgress(game) &&
                   square.mark === "" &&
-                  square.moveState === null,
+                  square.moveState === null &&
+                  !movePending(game),
       isMovePending: square.moveState === moveStates.MOVE_PENDING }
   }
 )(Square)
@@ -246,12 +300,15 @@ Board.propTypes = {
   onSquareClick: PropTypes.func.isRequired
 }
 
-const mapDispatchToProps = (dispatch) => ({
-  onSquareClick: (id) => {
-    if (DEBUG) console.log("onSquareClick", id)
-    dispatch(asyncMove(id))
+const mapDispatchToProps = (dispatch, props) => {
+  debug("mapDispatchToProps", props)
+  return {
+    onSquareClick: (id) => {
+      debug("onSquareClick", id, props)
+      dispatch(asyncMove(id))
+    }
   }
-})
+}
 
 const TicTacToe = connect(
   null,
@@ -267,4 +324,14 @@ const App = () => (
 
 
 export default App
-export {initialGameState, makeMove, outcomes, players, ticTacToe}
+export {
+  asyncMove,
+  initialGameState,
+  makeMove,
+  movePending,
+  moveStates,
+  outcomes,
+  players,
+  submitMove,
+  ticTacToe
+}

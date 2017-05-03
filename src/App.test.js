@@ -1,14 +1,25 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import thunkMiddleware from 'redux-thunk'
 import App from './App'
-import { initialGameState, makeMove, squares, outcomes, ticTacToe } from './App'
-import { createStore } from 'redux'
+import {
+  asyncMove,
+  initialGameState,
+  makeMove,
+  movePending,
+  outcomes,
+  submitMove,
+  squares,
+  ticTacToe
+} from './App'
+import { createStore, applyMiddleware } from 'redux'
 
 let store
+jest.useFakeTimers()
 
 beforeEach(() => {
-  store = createStore(ticTacToe, initialGameState)
+  store = createStore(ticTacToe, initialGameState, applyMiddleware(thunkMiddleware))
 })
 
 function mark(square) {
@@ -52,7 +63,6 @@ it('determines the winner', () => {
   mark("b2")
   mark("a3")
   // X should have won
-  console.log(store.getState())
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().turn).toEqual("X")
 })
@@ -85,4 +95,16 @@ it('differentiates between draw and win with all squares marked', () => {
   mark("c3") // X
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().winningLine).toEqual(['a1', 'b2', 'c3'])
+})
+
+it('supports async moves', async () => {
+  store.dispatch(asyncMove("a1"))
+  expect(store.getState().squares.a1.moveState).toEqual("MOVE_PENDING")
+  expect(movePending(store.getState())).toBeTruthy()
+  jest.runAllTimers()
+  expect(store.getState().turn).toEqual("O")
+  let squares = store.getState().squares
+  expect(squares.a1.moveState).toEqual("MOVE_COMPLETE")
+  expect(squares.a1.mark).toEqual("X")
+  expect(movePending(store.getState())).toBeFalsy()
 })
