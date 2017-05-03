@@ -89,7 +89,7 @@ const inProgress = (game) => {
 
 const movePending = (game) => {
   return _.some(game.squares,
-    (square) => {return square.moveState === "MOVE_PENDING"})
+    (square) => {return square.moveState === moveStates.MOVE_PENDING})
 }
 
 // Errors
