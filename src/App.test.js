@@ -1,19 +1,31 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import thunkMiddleware from 'redux-thunk'
 import App from './App'
-import { initialGameState, makeMove, outcomes, ticTacToe } from './App'
-import { createStore } from 'redux'
+import {
+  asyncMove,
+  initialGameState,
+  makeMove,
+  movePending,
+  outcomes,
+  submitMove,
+  squares,
+  ticTacToe
+} from './App'
+import { createStore, applyMiddleware } from 'redux'
 
 let store
+jest.useFakeTimers()
 
 beforeEach(() => {
-  store = createStore(ticTacToe, initialGameState)
+  store = createStore(ticTacToe, initialGameState, applyMiddleware(thunkMiddleware))
 })
 
 function mark(square) {
   store.dispatch(makeMove(square))
 }
+
 
 it('renders without crashing', () => {
   const div = document.createElement('div')
@@ -27,7 +39,7 @@ it('renders without crashing', () => {
 it('has an empty starting board', () => {
   let game = store.getState()
   for (let square in game.squares) {
-    expect(game.squares[square]).toEqual("")
+    expect(game.squares[square].mark).toEqual("")
   }
 })
 
@@ -37,9 +49,9 @@ it('starts with the outcome being unknown', () => {
 
 it('can make moves and take turns', () => {
   mark("a1")
-  expect(store.getState().squares.a1).toEqual("X")
+  expect(store.getState().squares.a1.mark).toEqual("X")
   mark("a2")
-  expect(store.getState().squares.a2).toEqual("O")
+  expect(store.getState().squares.a2.mark).toEqual("O")
 })
 
 it('determines the winner', () => {
@@ -83,4 +95,16 @@ it('differentiates between draw and win with all squares marked', () => {
   mark("c3") // X
   expect(store.getState().outcome).toEqual(outcomes.WIN)
   expect(store.getState().winningLine).toEqual(['a1', 'b2', 'c3'])
+})
+
+it('supports async moves', async () => {
+  store.dispatch(asyncMove("a1"))
+  expect(store.getState().squares.a1.moveState).toEqual("MOVE_PENDING")
+  expect(movePending(store.getState())).toBeTruthy()
+  jest.runAllTimers()
+  expect(store.getState().turn).toEqual("O")
+  let squares = store.getState().squares
+  expect(squares.a1.moveState).toEqual("MOVE_COMPLETE")
+  expect(squares.a1.mark).toEqual("X")
+  expect(movePending(store.getState())).toBeFalsy()
 })
