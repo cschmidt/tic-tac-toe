@@ -212,7 +212,7 @@ const asyncMove = (squareId) => {
       setTimeout(() => {
         dispatch(makeMove(squareId))
         dispatch(receiveMove(squareId))
-      }, 2000)
+      }, 500)
     } catch (e) {
       if (e instanceof MoveInProgressError ||
           e instanceof GameOverError ||
