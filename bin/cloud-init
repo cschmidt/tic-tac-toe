@@ -1,0 +1,7 @@
+#!/bin/bash
+aws --endpoint-url=http://localhost:4575 sns create-topic \
+  --name "tic-tac-toe-moves"
+
+# FIXME - look at FIFO queues and consider lowering the MessageRetentionPeriod
+aws --endpoint-url=http://localhost:4576 sqs create-queue \
+  --queue-name "tic-tac-toe-moves"

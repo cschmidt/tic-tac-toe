@@ -1,0 +1,15 @@
+  squares: {
+    a1: {mark: "", moveState: null},
+    a2: {mark: "", moveState: null},
+    a3: {mark: "", moveState: null},
+    b1: {mark: "", moveState: null},
+    b2: {mark: "", moveState: null},
+    b3: {mark: "", moveState: null},
+    c1: {mark: "", moveState: null},
+    c2: {mark: "", moveState: null},
+    c3: {mark: "", moveState: null}
+  },
+  turn: players.X,
+  outcome: outcomes.UNKNOWN,
+  winningLine: null,
+  synopsis: ""
