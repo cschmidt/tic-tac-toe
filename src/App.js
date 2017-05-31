@@ -187,6 +187,7 @@ const move = (game = {}, action) => {
     case actions.SUBMIT_MOVE:
       debug( "submitMove", squareId, game)
       if (movePending(game)) {
+        // FIXME: incorrect square specified as "in progress"
         throw new MoveInProgressError(squareId)
       } if (!inProgress(game)) {
         throw new GameOverError()
