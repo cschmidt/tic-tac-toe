@@ -1,7 +1,18 @@
 #!/bin/bash
-aws --endpoint-url=http://localhost:4575 sns create-topic \
+aws --profile personal \
+  sns create-topic \
+  --region "us-west-2" \
   --name "tic-tac-toe-moves"
 
 # FIXME - look at FIFO queues and consider lowering the MessageRetentionPeriod
-aws --endpoint-url=http://localhost:4576 sqs create-queue \
+aws --profile personal \
+  sqs create-queue \
+  --region "us-west-2" \
   --queue-name "tic-tac-toe-moves"
+
+# FIXME don't hard-code the ARNs
+aws --profile personal \
+  sns subscribe \
+  --topic-arn "arn:aws:sns:us-west-2:745313119890:tic-tac-toe-moves" \
+  --protocol sqs \
+  --notification-endpoint "arn:aws:sqs:us-west-2:745313119890:tic-tac-toe-moves"
