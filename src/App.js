@@ -64,11 +64,13 @@ const lines =
 // Actions
 const makeMove = (squareId) => ({
   type:actions.MAKE_MOVE,
-  squareId})
+  squareId,
+  meta: {local: false}})
 
 const submitMove = (squareId) => ({
   type: actions.SUBMIT_MOVE,
-  squareId})
+  squareId,
+  meta: {local: true}})
 
 const receiveMove = (squareId, state = {}) => ({
   type: actions.RECEIVE_MOVE,
@@ -175,7 +177,9 @@ const move = (game = {}, action) => {
       // mark the game board if the requested square is empty and the game is
       // still in play
       if (isSquareEmpty && inProgress(game)) {
-        squares[squareId] = {...squares[squareId], mark: game.turn}
+        squares[squareId] = {...squares[squareId],
+                             mark: game.turn,
+                             moveState: moveStates.MOVE_COMPLETE}
         var {outcome, winningLine} = determineOutcome(squares)
         // switch players if the game is still in play
         var turn =
@@ -200,6 +204,9 @@ const move = (game = {}, action) => {
     case actions.RECEIVE_MOVE:
       squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_COMPLETE}
       return {...game, squares}
+    case 'SERVER_DATA':
+      debug( 'SERVER_DATA', action.state)
+      return {...game, ...action.state}
     default:
       return game
   }
@@ -306,7 +313,8 @@ const mapDispatchToProps = (dispatch, props) => {
   return {
     onSquareClick: (id) => {
       debug("onSquareClick", id, props)
-      dispatch(asyncMove(id))
+      dispatch(submitMove(id))
+      dispatch(makeMove(id))
     }
   }
 }

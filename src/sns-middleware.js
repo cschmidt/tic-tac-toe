@@ -6,7 +6,7 @@ import * as _ from 'underscore'
 // them to an SNS topic.
 
 
-const DEBUG = true
+const DEBUG = false
 var running = false
 var receiving = false
 var receivedMessageHandles = []
@@ -39,12 +39,11 @@ const receiveMessages = (onMessageReceived) => {
           console.log('While receiving', err)
         } else {
           receiving = false
-          debug("Received", data.Messages.length, "messages")
           data.Messages.forEach((message) => {
             // Push the id and handle onto a queue so we can delete it later
             receivedMessageHandles.push({Id: message.MessageId,
                                          ReceiptHandle: message.ReceiptHandle})
-            let parsedBody = JSON.parse(message.Body);
+            let parsedBody = JSON.parse(message.Body)
             let bodyMessage = JSON.parse(parsedBody['Message'])
             onMessageReceived(bodyMessage)
           })
@@ -75,12 +74,13 @@ const deleteMessages = () => {
 }
 
 
-const start = () => {
+const start = (store) => {
   if (!running) {
     running = true
     setInterval(() => {
-      receiveMessages((message) => {
-        console.log('Received', message)
+      receiveMessages((state) => {
+        debug('Received', state)
+        store.dispatch({type: 'SERVER_DATA', state, meta: {local: true}})
       })
     }, 20)
     setInterval(deleteMessages, 2000)
@@ -88,15 +88,24 @@ const start = () => {
 }
 
 
-const publishAction = store => next => action => {
-  if (!running) start()
-  debug('Sending', action)
-  sns.publish({
-    Message: JSON.stringify(action),
-    TopicArn: config.aws.topicArn
-  }, (err, data) => {if (err) console.log(err)})
-  let result = next(action)
-  return result
+const publishAction = reducer => store => next => action => {
+  if (!running) start(store)
+  if (action.meta && action.meta.local) {
+    // if the action is marked for local processing, then do the state update
+    // here on the client
+    return next(action)
+  } else {
+    // otherwise, get the next state from the reducer, and publish that state
+    // which we'll fetch from an SQS message
+    let stateUpdate = reducer(store.getState(), action)
+    debug('Sending', action)
+    sns.publish({
+      Message: JSON.stringify(stateUpdate),
+      TopicArn: config.aws.topicArn
+    }, (err, data) => {if (err) console.log(err)})
+    // don't process the action locally
+    return {}
+  }
 }
 
 

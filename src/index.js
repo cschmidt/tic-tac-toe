@@ -8,7 +8,10 @@ import { publishAction } from './sns-middleware'
 import App from './App'
 import './index.css'
 
-const store = createStore(ticTacToe, initialGameState, applyMiddleware(thunkMiddleware, publishAction))
+const store =
+  createStore(ticTacToe,
+    initialGameState,
+    applyMiddleware(thunkMiddleware, publishAction(ticTacToe)))
 
 render(
   <Provider store={store}>
