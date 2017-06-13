@@ -72,12 +72,6 @@ const submitMove = (squareId) => ({
   squareId,
   meta: {local: true}})
 
-const receiveMove = (squareId, state = {}) => ({
-  type: actions.RECEIVE_MOVE,
-  squareId,
-  state
-})
-
 // Utility functions
 const debug = (...args) => {
   if (DEBUG) console.log(...args)
@@ -201,35 +195,11 @@ const move = (game = {}, action) => {
         squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_PENDING}
       }
       return {...game, squares}
-    case actions.RECEIVE_MOVE:
-      squares[squareId] = {...squares[squareId], moveState: moveStates.MOVE_COMPLETE}
-      return {...game, squares}
     case 'SERVER_DATA':
       debug( 'SERVER_DATA', action.state)
       return {...game, ...action.state}
     default:
       return game
-  }
-}
-
-const asyncMove = (squareId) => {
-  debug("asyncMove", squareId)
-  return (dispatch) => {
-    try {
-      dispatch(submitMove(squareId))
-      setTimeout(() => {
-        dispatch(makeMove(squareId))
-        dispatch(receiveMove(squareId))
-      }, 500)
-    } catch (e) {
-      if (e instanceof MoveInProgressError ||
-          e instanceof GameOverError ||
-          e instanceof SquareAlreadyMarkedError) {
-        debug(e.message)
-      } else {
-        throw e
-      }
-    }
   }
 }
 
@@ -334,7 +304,6 @@ const App = () => (
 
 export default App
 export {
-  asyncMove,
   initialGameState,
   makeMove,
   movePending,
