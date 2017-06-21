@@ -8,11 +8,32 @@ aws --profile personal \
 aws --profile personal \
   sqs create-queue \
   --region "us-west-2" \
-  --queue-name "tic-tac-toe-moves"
+  --queue-name "tic-tac-toe-moves-player-1"
+
+aws --profile personal \
+  sqs create-queue \
+  --region "us-west-2" \
+  --queue-name "tic-tac-toe-moves-player-2"
+
+aws --profile personal \
+  sqs get-queue-attributes \
+  --attribute-names All \
+  --queue-url https://us-west-2.queue.amazonaws.com/745313119890/tic-tac-toe-moves-player-1
+
+aws --profile personal \
+  sqs get-queue-attributes \
+  --attribute-names All \
+  --queue-url https://us-west-2.queue.amazonaws.com/745313119890/tic-tac-toe-moves-player-2
 
 # FIXME don't hard-code the ARNs
 aws --profile personal \
   sns subscribe \
   --topic-arn "arn:aws:sns:us-west-2:745313119890:tic-tac-toe-moves" \
   --protocol sqs \
-  --notification-endpoint "arn:aws:sqs:us-west-2:745313119890:tic-tac-toe-moves"
+  --notification-endpoint "arn:aws:sqs:us-west-2:745313119890:tic-tac-toe-moves-player-1"
+
+aws --profile personal \
+  sns subscribe \
+  --topic-arn "arn:aws:sns:us-west-2:745313119890:tic-tac-toe-moves" \
+  --protocol sqs \
+  --notification-endpoint "arn:aws:sqs:us-west-2:745313119890:tic-tac-toe-moves-player-2"
