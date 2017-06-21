@@ -6,7 +6,7 @@ import * as _ from 'underscore'
 // them to an SNS topic.
 
 
-const DEBUG = false
+const DEBUG = true
 var running = false
 var receiving = false
 var receivedMessageHandles = []
@@ -18,12 +18,32 @@ const awsOptions = {
 
 const sns = new AWS.SNS(awsOptions)
 const sqs = new AWS.SQS(awsOptions)
+const sqsQueueUrl = config.aws.queueUrlPlayer1
 
 // Utility functions
 const debug = (...args) => {
   if (DEBUG) console.log(...args)
 }
 
+// Actions
+const assignQueue = (queueUrl) => {
+  return {
+    type: 'ASSIGN_QUEUE',
+    meta: {local: true},
+    queueUrl
+  }
+}
+
+
+// Reducers
+const reducer = (state={}, action) => {
+  switch (action.type) {
+    case 'ASSIGN_QUEUE':
+      return {...state, queueUrl: action.queueUrl}
+    default:
+      return state
+  }
+}
 
 const receiveMessages = (onMessageReceived) => {
   if (receiving) {
@@ -31,7 +51,7 @@ const receiveMessages = (onMessageReceived) => {
   } else {
     receiving = true
     sqs.receiveMessage({
-        QueueUrl: config.aws.queueUrl,
+        QueueUrl: sqsQueueUrl,
         WaitTimeSeconds: 20,
         MaxNumberOfMessages: 10
       }, (err, data) => {
@@ -61,7 +81,7 @@ const deleteMessages = () => {
   }
   if (Entries.length > 0) {
     sqs.deleteMessageBatch({
-        QueueUrl: config.aws.queueUrl,
+        QueueUrl: sqsQueueUrl,
         Entries
     }, (err, data) => {
       if (err) {
@@ -89,12 +109,12 @@ const start = (store) => {
 
 
 const publishAction = reducer => store => next => action => {
-  if (!running) start(store)
   if (action.meta && action.meta.local) {
     // if the action is marked for local processing, then do the state update
     // here on the client
     return next(action)
   } else {
+    if (!running) start(store)
     // otherwise, get the next state from the reducer, and publish that state
     // which we'll fetch from an SQS message
     let stateUpdate = reducer(store.getState(), action)
@@ -109,4 +129,4 @@ const publishAction = reducer => store => next => action => {
 }
 
 
-export {publishAction}
+export {assignQueue, publishAction}

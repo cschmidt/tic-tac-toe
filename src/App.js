@@ -3,7 +3,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
-const DEBUG = false
+const DEBUG = true
 
 // Type Constants
 
@@ -161,11 +161,12 @@ const determineOutcome = (squares) => {
 }
 
 
-const move = (game = {}, action) => {
-  debug("move", action)
+const move = (game = initialGameState, action) => {
+  debug("move", action, game)
   var squares = {...game.squares}
   var squareId = action.squareId
   var isSquareEmpty = squares[squareId] && squares[squareId].mark === ""
+
   switch (action.type) {
     case actions.MAKE_MOVE:
       // mark the game board if the requested square is empty and the game is
