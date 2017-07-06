@@ -3,7 +3,7 @@ import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
-const DEBUG = true
+const DEBUG = false
 
 // Type Constants
 
@@ -20,8 +20,7 @@ const outcomes = {
 
 const actions = {
   SUBMIT_MOVE: "SUBMIT_MOVE",
-  MAKE_MOVE: "MAKE_MOVE",
-  RECEIVE_MOVE: "RECEIVE_MOVE"
+  MAKE_MOVE: "MAKE_MOVE"
 }
 
 const moveStates = {
@@ -229,9 +228,10 @@ Square.propTypes = {
 }
 
 const SquareContainer = connect(
-  (game, props) => {
+  ({ticTacToe}, props) => {
+    let game = ticTacToe
+    // debug("mapStateToProps", props.id, game)
     let square = game.squares[props.id]
-    debug("connect", props.id, square)
     return {
       mark: square.mark,
       isMarkable: inProgress(game) &&
@@ -290,8 +290,13 @@ const mapDispatchToProps = (dispatch, props) => {
   }
 }
 
+
 const TicTacToe = connect(
-  null,
+  // FIXME: not sure that it should be necessary to deconstruct the state here, Redux-React
+  // ought to know to do this already
+  state => {
+    return state.ticTacToe ? state.ticTacToe : {}
+  },
   mapDispatchToProps
 )(Board)
 
