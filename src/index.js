@@ -1,18 +1,21 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { Provider } from 'react-redux'
-import { createStore, applyMiddleware } from 'redux'
+import { combineReducers, createStore, compose, applyMiddleware } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import { ticTacToe } from './App'
-import { assignQueue, publishAction } from './sns-middleware'
+import { assignQueue, queues, publishAction } from './sns-middleware'
 import App from './App'
 import './index.css'
 import {config} from './config'
 
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+
 const store =
-  createStore(ticTacToe,
+  createStore(
+    combineReducers({ticTacToe, queues}),
     undefined,
-    applyMiddleware(thunkMiddleware, publishAction(ticTacToe)))
+    composeEnhancers(applyMiddleware(thunkMiddleware, publishAction(ticTacToe))))
 
 
 render(
