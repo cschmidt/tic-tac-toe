@@ -18,11 +18,19 @@ const awsOptions = {
 
 const sns = new AWS.SNS(awsOptions)
 const sqs = new AWS.SQS(awsOptions)
-const sqsQueueUrl = config.aws.queueUrlPlayer1
+// const sqsQueueUrl = config.aws.queueUrlPlayer1
 
 // Utility functions
 const debug = (...args) => {
   if (DEBUG) console.log(...args)
+}
+
+// Errors
+function NotConfiguredError(message) {
+  this.message = message
+  this.toString = () => {
+    return this.message
+  }
 }
 
 // Actions
@@ -36,7 +44,8 @@ const assignQueue = (queueUrl) => {
 
 
 // Reducers
-const reducer = (state={}, action) => {
+const queues = (state={}, action) => {
+  debug("queues", state, action)
   switch (action.type) {
     case 'ASSIGN_QUEUE':
       return {...state, queueUrl: action.queueUrl}
@@ -45,7 +54,7 @@ const reducer = (state={}, action) => {
   }
 }
 
-const receiveMessages = (onMessageReceived) => {
+const receiveMessages = (onMessageReceived, sqsQueueUrl) => {
   if (receiving) {
     return
   } else {
@@ -74,7 +83,7 @@ const receiveMessages = (onMessageReceived) => {
 }
 
 
-const deleteMessages = () => {
+const deleteMessages = (sqsQueueUrl) => {
   let Entries = []
   while (Entries.length < 10 && receivedMessageHandles.length > 0) {
     Entries.push(receivedMessageHandles.pop())
@@ -96,14 +105,20 @@ const deleteMessages = () => {
 
 const start = (store) => {
   if (!running) {
+    debug('Starting')
+    const queueUrl = store.getState().queues.queueUrl
+    if (queueUrl === undefined) {
+      throw new NotConfiguredError("No queueUrl found in store")
+    }
     running = true
     setInterval(() => {
       receiveMessages((state) => {
         debug('Received', state)
         store.dispatch({type: 'SERVER_DATA', state, meta: {local: true}})
-      })
+      }, queueUrl)
     }, 20)
-    setInterval(deleteMessages, 2000)
+    setInterval(() => {deleteMessages(queueUrl)}, 2000)
+    debug('Started')
   }
 }
 
@@ -120,7 +135,8 @@ const publishAction = reducer => store => next => action => {
     let stateUpdate = reducer(store.getState(), action)
     debug('Sending', action)
     sns.publish({
-      Message: JSON.stringify(stateUpdate),
+      //FIXME: cannot know about ticTacToe!
+      Message: JSON.stringify(stateUpdate.ticTacToe),
       TopicArn: config.aws.topicArn
     }, (err, data) => {if (err) console.log(err)})
     // don't process the action locally
@@ -129,4 +145,4 @@ const publishAction = reducer => store => next => action => {
 }
 
 
-export {assignQueue, publishAction}
+export {assignQueue, publishAction, queues}
