@@ -12,13 +12,18 @@ import {
   squares,
   ticTacToe
 } from './App'
-import { createStore, applyMiddleware } from 'redux'
+import { combineReducers, createStore, applyMiddleware } from 'redux'
+
 
 let store
 jest.useFakeTimers()
 
+const game = () => {
+  return store.getState().ticTacToe
+}
+
 beforeEach(() => {
-  store = createStore(ticTacToe, initialGameState, applyMiddleware(thunkMiddleware))
+  store = createStore(combineReducers({ticTacToe}), undefined, applyMiddleware(thunkMiddleware))
 })
 
 function mark(square) {
@@ -36,34 +41,33 @@ it('renders without crashing', () => {
 })
 
 it('has an empty starting board', () => {
-  let game = store.getState()
-  for (let square in game.squares) {
-    expect(game.squares[square].mark).toEqual("")
+  for (let square in game().squares) {
+    expect(game().squares[square].mark).toEqual("")
   }
 })
 
 it('starts with the outcome being unknown', () => {
-  expect(store.getState().outcome).toEqual(outcomes.UNKNOWN)
+  expect(game().outcome).toEqual(outcomes.UNKNOWN)
 })
 
 it('can make moves and take turns', () => {
   mark("a1")
-  expect(store.getState().squares.a1.mark).toEqual("X")
+  expect(game().squares.a1.mark).toEqual("X")
   mark("a2")
-  expect(store.getState().squares.a2.mark).toEqual("O")
+  expect(game().squares.a2.mark).toEqual("O")
 })
 
 it('determines the winner', () => {
   mark("a1")
   // we still don't know the outcome after a single move
-  expect(store.getState().outcome).toEqual(outcomes.UNKNOWN)
+  expect(game().outcome).toEqual(outcomes.UNKNOWN)
   mark("b1")
   mark("a2")
   mark("b2")
   mark("a3")
   // X should have won
-  expect(store.getState().outcome).toEqual(outcomes.WIN)
-  expect(store.getState().turn).toEqual("X")
+  expect(game().outcome).toEqual(outcomes.WIN)
+  expect(game().turn).toEqual("X")
 })
 
 it('knows when the game is a draw', () => {
@@ -77,9 +81,9 @@ it('knows when the game is a draw', () => {
   mark("a3") // O
   mark("c3") // X
   // should now have a draw
-  expect(store.getState().outcome).toEqual(outcomes.DRAW)
+  expect(game().outcome).toEqual(outcomes.DRAW)
   // last turn was X
-  expect(store.getState().turn).toEqual("X")
+  expect(game().turn).toEqual("X")
 })
 
 it('differentiates between draw and win with all squares marked', () => {
@@ -92,6 +96,6 @@ it('differentiates between draw and win with all squares marked', () => {
   mark("b3") // X
   mark("a3") // O
   mark("c3") // X
-  expect(store.getState().outcome).toEqual(outcomes.WIN)
-  expect(store.getState().winningLine).toEqual(['a1', 'b2', 'c3'])
+  expect(game().outcome).toEqual(outcomes.WIN)
+  expect(game().winningLine).toEqual(['a1', 'b2', 'c3'])
 })
