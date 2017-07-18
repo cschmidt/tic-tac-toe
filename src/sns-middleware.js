@@ -132,11 +132,11 @@ const publishAction = reducer => store => next => action => {
     if (!running) start(store)
     // otherwise, get the next state from the reducer, and publish that state
     // which we'll fetch from an SQS message
-    let stateUpdate = reducer(store.getState(), action)
-    debug('Sending', action)
+    //FIXME: cannot know about ticTacToe!
+    let stateUpdate = reducer(store.getState().ticTacToe, action)
+    debug('Sending', action, stateUpdate)
     sns.publish({
-      //FIXME: cannot know about ticTacToe!
-      Message: JSON.stringify(stateUpdate.ticTacToe),
+      Message: JSON.stringify(stateUpdate),
       TopicArn: config.aws.topicArn
     }, (err, data) => {if (err) console.log(err)})
     // don't process the action locally
@@ -145,4 +145,4 @@ const publishAction = reducer => store => next => action => {
 }
 
 
-export {assignQueue, publishAction, queues}
+export {assignQueue, publishAction, queues, start}
