@@ -4,7 +4,7 @@ import { Provider } from 'react-redux'
 import { combineReducers, createStore, compose, applyMiddleware } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import { ticTacToe } from './App'
-import { assignQueue, queues, publishAction } from './sns-middleware'
+import { assignQueue, queues, publishAction, start } from './sns-middleware'
 import App from './App'
 import './index.css'
 import {config} from './config'
@@ -28,6 +28,8 @@ render(
         onClick={() => store.dispatch(assignQueue(config.aws.queueUrlPlayer1))}>Player 1</button>
       <button name="Player 2"
         onClick={() => store.dispatch(assignQueue(config.aws.queueUrlPlayer2))}>Player 2</button>
+      <button name="Start"
+        onClick={() => start(store)}>Start</button>
     </div>
   </div>,
   document.getElementById('root')
