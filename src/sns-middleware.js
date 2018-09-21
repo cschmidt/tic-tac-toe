@@ -1,5 +1,5 @@
 import AWS from 'aws-sdk'
-import {config} from './config'
+import { config } from './config'
 import * as _ from 'underscore'
 
 // SNS Middleware allows you to intercept Redux actions you specify, and publish
@@ -37,18 +37,18 @@ function NotConfiguredError(message) {
 const assignQueue = (queueUrl) => {
   return {
     type: 'ASSIGN_QUEUE',
-    meta: {local: true},
+    meta: { local: true },
     queueUrl
   }
 }
 
 
 // Reducers
-const queues = (state={}, action) => {
-  debug("queues", state, action)
+const queues = (state = {}, action) => {
+  debug('queues', state, action)
   switch (action.type) {
     case 'ASSIGN_QUEUE':
-      return {...state, queueUrl: action.queueUrl}
+      return { ...state, queueUrl: action.queueUrl }
     default:
       return state
   }
@@ -57,28 +57,31 @@ const queues = (state={}, action) => {
 const receiveMessages = (onMessageReceived, sqsQueueUrl) => {
   if (receiving) {
     return
-  } else {
+  }
+  else {
     receiving = true
     sqs.receiveMessage({
-        QueueUrl: sqsQueueUrl,
-        WaitTimeSeconds: 20,
-        MaxNumberOfMessages: 10
-      }, (err, data) => {
-        if (err) {
-          console.log('While receiving', err)
-        } else {
-          receiving = false
-          data.Messages.forEach((message) => {
-            // Push the id and handle onto a queue so we can delete it later
-            receivedMessageHandles.push({Id: message.MessageId,
-                                         ReceiptHandle: message.ReceiptHandle})
-            let parsedBody = JSON.parse(message.Body)
-            let bodyMessage = JSON.parse(parsedBody['Message'])
-            onMessageReceived(bodyMessage)
-          })
-        }
+      QueueUrl: sqsQueueUrl,
+      WaitTimeSeconds: 20,
+      MaxNumberOfMessages: 10
+    }, (err, data) => {
+      if (err) {
+        console.log('While receiving', err)
       }
-    )
+      else {
+        receiving = false
+        data.Messages.forEach((message) => {
+          // Push the id and handle onto a queue so we can delete it later
+          receivedMessageHandles.push({
+            Id: message.MessageId,
+            ReceiptHandle: message.ReceiptHandle
+          })
+          let parsedBody = JSON.parse(message.Body)
+          let bodyMessage = JSON.parse(parsedBody['Message'])
+          onMessageReceived(bodyMessage)
+        })
+      }
+    })
   }
 }
 
@@ -90,12 +93,13 @@ const deleteMessages = (sqsQueueUrl) => {
   }
   if (Entries.length > 0) {
     sqs.deleteMessageBatch({
-        QueueUrl: sqsQueueUrl,
-        Entries
+      QueueUrl: sqsQueueUrl,
+      Entries
     }, (err, data) => {
       if (err) {
         console.log('While deleting', err)
-      } else {
+      }
+      else {
         debug('Deleted', Entries.length, 'messages')
       }
     })
@@ -108,16 +112,16 @@ const start = (store) => {
     debug('Starting')
     const queueUrl = store.getState().queues.queueUrl
     if (queueUrl === undefined) {
-      throw new NotConfiguredError("No queueUrl found in store")
+      throw new NotConfiguredError('No queueUrl found in store')
     }
     running = true
     setInterval(() => {
       receiveMessages((state) => {
         debug('Received', state)
-        store.dispatch({type: 'SERVER_DATA', state, meta: {local: true}})
+        store.dispatch({ type: 'SERVER_DATA', state, meta: { local: true } })
       }, queueUrl)
     }, 20)
-    setInterval(() => {deleteMessages(queueUrl)}, 2000)
+    setInterval(() => { deleteMessages(queueUrl) }, 2000)
     debug('Started')
   }
 }
@@ -128,7 +132,8 @@ const publishAction = reducer => store => next => action => {
     // if the action is marked for local processing, then do the state update
     // here on the client
     return next(action)
-  } else {
+  }
+  else {
     if (!running) start(store)
     // otherwise, get the next state from the reducer, and publish that state
     // which we'll fetch from an SQS message
@@ -138,11 +143,11 @@ const publishAction = reducer => store => next => action => {
     sns.publish({
       Message: JSON.stringify(stateUpdate),
       TopicArn: config.aws.topicArn
-    }, (err, data) => {if (err) console.log(err)})
+    }, (err, data) => { if (err) console.log(err) })
     // don't process the action locally
     return {}
   }
 }
 
 
-export {assignQueue, publishAction, queues, start}
+export { assignQueue, publishAction, queues, start }
