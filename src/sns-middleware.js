@@ -1,6 +1,5 @@
 import AWS from 'aws-sdk'
 import { config } from './config'
-import * as _ from 'underscore'
 
 // SNS Middleware allows you to intercept Redux actions you specify, and publish
 // them to an SNS topic.
