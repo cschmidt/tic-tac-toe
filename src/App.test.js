@@ -6,7 +6,10 @@ import thunkMiddleware from 'redux-thunk'
 import App from './App'
 import {
   makeMove,
+  movePending,
   outcomes,
+  submitMove,
+  squares,
   ticTacToe
 }
 from './App'

@@ -29,9 +29,6 @@ const lines = [
 export class GameOverError extends Error {
   constructor() {
     super('Game Over!')
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, GameOverError)
-    }
   }
 }
 
@@ -122,9 +119,6 @@ export default class TicTacToe {
       case outcomes.DRAW:
         this.synopsis = 'Draw'
         break
-      default:
-        // debug('Oh no, outcome was unexpected!', outcome)
-        synopsis = '?'
     }
     return synopsis
   }
